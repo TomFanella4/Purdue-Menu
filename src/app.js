@@ -13,12 +13,12 @@ function fetchHTML(URL) {
   },
   function(data) {
     // Success!
-    console.log('Successfully fetched the menu!');
+    //console.log('Successfully fetched the menu!');
     html = data;
   },
   function(error) {
     // Failure!
-    console.log('Failed to get the menu listings');
+    //console.log('Failed to get the menu listings');
     html = "";
   });
   
@@ -123,10 +123,10 @@ main.on('select', function(e) {
     //console.log(mealHours);
     
     if (mealHours.indexOf("Not Serving") < 0) {
-      console.log("court " + i + " is serving");
+      //console.log("court " + i + " is serving");
     }
     else {
-      console.log("court " + i + " is not serving");
+      //console.log("court " + i + " is not serving");
       meals[i].title += " (NS)";
     }
     

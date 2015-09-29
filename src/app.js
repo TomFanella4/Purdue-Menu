@@ -8,8 +8,8 @@ function fetchHTML(URL) {
   
   ajax({
     url: URL,
-    async: false,
-    type: 'string'
+    async: false, // Used to make ajax finish before creating meal menu
+    type: 'string' // Readable format
   },
   function(data) {
     // Success!
@@ -25,6 +25,7 @@ function fetchHTML(URL) {
   return html;
 }
 
+// List of Dining courts at Purdue
 var courts = [
   {
     title: "Earhart"
@@ -39,6 +40,7 @@ var courts = [
   }
 ];
 
+// Menu containing list of dining courts
 var main = new UI.Menu({
   sections: [{
     title: 'Dining Courts',
@@ -46,11 +48,13 @@ var main = new UI.Menu({
   }]
 });
 
+// Event occurs when user selects a court
 main.on('select', function(e) {
-  var menuURL = "http://www.housing.purdue.edu/Menus/";
-  var numMeals;
+  var menuURL = "http://www.housing.purdue.edu/Menus/"; // URL of website containing the menu HTML
+  var numMeals; // # of Breakfast, lunch, (late lunch), Dinner
   var meals;
   
+  // Sets the URL and number of meals depending on the court selected
   switch (e.item.title) {
     case "Earhart":
       menuURL += "ERHT";
@@ -78,6 +82,7 @@ main.on('select', function(e) {
   // Creates a list of meals with late lunch or not with late lunch
   var day = new Date().getDay();
   
+  // On Saturday and Sunday Ford and Windsor only have 3 meals. Checks and sets that here
   if (numMeals == 3 || day === 0 || day == 6) {
     numMeals = 3;
     meals = [
@@ -102,26 +107,32 @@ main.on('select', function(e) {
       }
     ];
   }
-    
+  
+  // Fetches the menu for the given meal
   var menuHTML = fetchHTML(menuURL);
   
-  // console.log(menuHTML);
-  // TO-DO Extract data from HTML
+  // Checks if the fetcher was unable to get the html
+  if (menuHTML === "")
+    return;
   
-  // Initalize variables for meal start position, meal end position and string containing meal hours
+  // console.log(menuHTML);
+  
+  // Initalize variables for meal start position, meal end position, string containing meal hours and an array containing the list of meals
   var mealStartPos = 0, mealEndPos = 0;
   var mealHours = "";
   var mealItems = [numMeals];
   
+  // Iterates through the list of meals and finds if that meal is serving food or not
   for (var i = 0; i < numMeals; i++) {
     mealStartPos = menuHTML.indexOf("location-meal-container", mealStartPos); // Gets the position of the current meal
     mealEndPos = menuHTML.indexOf("/table", mealStartPos); // Gets the stoping position of the current meal
-    mealHours = menuHTML.substring(mealStartPos, mealEndPos);
+    mealHours = menuHTML.substring(mealStartPos, mealEndPos); // Gets the content of the current meal
     
-    mealItems[i] = mealHours;
+    mealItems[i] = mealHours; // Sets meal in array for later
     
     //console.log(mealHours);
     
+    // Checks if the court is not serving
     if (mealHours.indexOf("Not Serving") < 0) {
       //console.log("court " + i + " is serving");
     }
@@ -133,7 +144,7 @@ main.on('select', function(e) {
     mealStartPos++;
   }
   
-  // To-DO Export data to new card
+  // Menu containing the list of meals
   var court = new UI.Menu({
     sections: [{
       title: e.item.title,
@@ -141,21 +152,26 @@ main.on('select', function(e) {
     }]
   });
   
+  // Event occurs when user selects a meal
   court.on('select', function(e) {
+    
+    // Checks if the court is not serving
     if (e.item.title.indexOf("(NS)") >= 0)
       return;
     
+    // Initalize variables for current meals html, meal start position, meal start position, current meal, and final output
     var currentMealHTML = mealItems[e.itemIndex];
     var currentMealStartIndex = 0, currentMealEndIndex;
     var currentMeal, mealOutput = "";
     
+    // Loop to get list of items on menu
     while (true) {
-      currentMealStartIndex = currentMealHTML.indexOf("><span>", currentMealStartIndex);
-      currentMealEndIndex = currentMealHTML.indexOf("</", currentMealStartIndex);
+      currentMealStartIndex = currentMealHTML.indexOf("><span>", currentMealStartIndex); // Gets the starting position of the current meal
+      currentMealEndIndex = currentMealHTML.indexOf("</", currentMealStartIndex); // Gets the ending position of the current meal
       
-      if (currentMealStartIndex != -1) {
-        currentMeal = currentMealHTML.substring(currentMealStartIndex + 7, currentMealEndIndex);
-        mealOutput += ("- " + currentMeal + "\n");
+      if (currentMealStartIndex != -1) { // Checks if there are no more meals
+        currentMeal = currentMealHTML.substring(currentMealStartIndex + 7, currentMealEndIndex); // Gets the current meal
+        mealOutput += ("- " + currentMeal + "\n"); // Adds current meal to the list of meals
       } else {
         break;
       }
@@ -163,8 +179,9 @@ main.on('select', function(e) {
       currentMealStartIndex++;
     }
     
-    console.log(mealOutput);
+    //console.log(mealOutput);
     
+    // Card containing the list of meals
     var fList = new UI.Card({
       title: e.item.title,
       scrollable: true,
